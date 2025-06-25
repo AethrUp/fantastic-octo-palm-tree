@@ -35,7 +35,8 @@ try {
             'X-Requested-With': 'XMLHttpRequest',
             'Origin': 'https://public.courts.in.gov',
             'Referer': 'https://public.courts.in.gov/mycase/',
-            'Accept': 'application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9,image/*;q=0.8,*/*;q=0.7'
+            'Accept': 'application/json,text/html,application/xhtml+xml,application/xml,text/*;q=0.9,image/*;q=0.8,*/*;q=0.7',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         },
         json: {
             CourtItemID: courtItemID,
@@ -46,20 +47,54 @@ try {
             ActiveFlag: activeFlag,
             FileStart: fileStart || '',
             FileEnd: fileEnd || ''
-        }
+        },
+        timeout: {
+            request: 30000 // 30 second timeout
+        },
+        retry: {
+            limit: 2
+        },
+        followRedirect: true,
+        maxRedirects: 5
     };
 
     console.log('Making request to:', requestConfig.url);
     console.log('Request payload:', requestConfig.json);
 
-    // Make the HTTP request
-    const response = await gotScraping(requestConfig);
+    let response;
+    let responseData;
+
+    try {
+        // First attempt with got-scraping
+        response = await gotScraping(requestConfig);
+        console.log('Request successful with got-scraping');
+    } catch (gotError) {
+        console.log('got-scraping failed, trying with fetch...', gotError.message);
+        
+        // Fallback to native fetch
+        try {
+            const fetchResponse = await fetch(requestConfig.url, {
+                method: 'POST',
+                headers: requestConfig.headers,
+                body: JSON.stringify(requestConfig.json)
+            });
+            
+            response = {
+                statusCode: fetchResponse.status,
+                headers: Object.fromEntries(fetchResponse.headers.entries()),
+                body: await fetchResponse.text()
+            };
+            console.log('Request successful with fetch');
+        } catch (fetchError) {
+            console.error('Both got-scraping and fetch failed');
+            throw new Error(`Network request failed: got-scraping: ${gotError.message}, fetch: ${fetchError.message}`);
+        }
+    }
     
     console.log('Response status:', response.statusCode);
     console.log('Response headers:', response.headers);
 
     // Parse response
-    let responseData;
     try {
         responseData = JSON.parse(response.body);
     } catch (parseError) {
