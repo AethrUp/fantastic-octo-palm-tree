@@ -1,0 +1,62 @@
+{
+    "title": "Indiana Courts API Actor Input",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+      "courtItemID": {
+        "title": "Court Item ID",
+        "type": "string",
+        "description": "Required court identifier (e.g., '{{ $json.courts }}')",
+        "editor": "textfield"
+      },
+      "queryText": {
+        "title": "Query Text",
+        "type": "string",
+        "description": "Search query text (optional)",
+        "editor": "textfield",
+        "default": ""
+      },
+      "pageIndex": {
+        "title": "Page Index",
+        "type": "string",
+        "description": "Page number to retrieve",
+        "editor": "textfield",
+        "default": "1"
+      },
+      "pageSize": {
+        "title": "Page Size",
+        "type": "string",
+        "description": "Number of results per page",
+        "editor": "textfield",
+        "default": "20"
+      },
+      "advanced": {
+        "title": "Advanced Search",
+        "type": "string",
+        "description": "Enable advanced search",
+        "editor": "select",
+        "enum": ["true", "false"],
+        "default": "true"
+      },
+      "activeFlag": {
+        "title": "Active Flag",
+        "type": "string",
+        "description": "Filter by case status",
+        "editor": "select",
+        "enum": ["All", "Active", "Inactive"],
+        "default": "All"
+      },
+      "fileStart": {
+        "title": "File Start Date",
+        "type": "string",
+        "description": "Start date for file filtering (optional)",
+        "editor": "textfield"
+      },
+      "fileEnd": {
+        "title": "File End Date",
+        "type": "string",
+        "description": "End date for file filtering (optional)",
+        "editor": "textfield"
+      }
+  }
+}

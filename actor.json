@@ -1,0 +1,12 @@
+{
+    "actorSpecification": 1,
+    "name": "indiana-courts-api",
+    "title": "Indiana Courts API Actor",
+    "description": "Makes HTTP calls to the Indiana Courts public search API",
+    "version": "1.0.0",
+    "meta": {
+      "templateId": "javascript-cheerio"
+    },
+    "input": "./INPUT_SCHEMA.json",
+    "dockerfile": "./Dockerfile"
+  }

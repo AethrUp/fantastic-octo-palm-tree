@@ -1,0 +1,17 @@
+{
+    "name": "indiana-courts-api-actor",
+    "version": "1.0.0",
+    "description": "Apify Actor for making HTTP calls to Indiana Courts API",
+    "main": "main.js",
+    "type": "module",
+    "scripts": {
+      "start": "node main.js"
+    },
+    "dependencies": {
+      "apify": "^3.1.0",
+      "got-scraping": "^4.0.0"
+    },
+    "repository": {},
+    "author": "",
+    "license": "ISC"
+}
