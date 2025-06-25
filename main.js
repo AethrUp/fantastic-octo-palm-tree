@@ -64,30 +64,80 @@ try {
     let response;
     let responseData;
 
+    // First, let's test basic connectivity
+    console.log('Testing DNS resolution...');
     try {
-        // First attempt with got-scraping
-        response = await gotScraping(requestConfig);
-        console.log('Request successful with got-scraping');
-    } catch (gotError) {
-        console.log('got-scraping failed, trying with fetch...', gotError.message);
+        const testResponse = await fetch('https://httpbin.org/get');
+        console.log('Basic internet connectivity: OK');
+    } catch (testError) {
+        console.log('Basic internet connectivity failed:', testError.message);
+    }
+
+    // Try different approaches
+    const attempts = [
+        // Attempt 1: got-scraping with proxy
+        async () => {
+            console.log('Attempt 1: got-scraping with Apify proxy...');
+            return await gotScraping({
+                ...requestConfig,
+                proxyUrl: await Actor.createProxyConfiguration()?.newUrl()
+            });
+        },
         
-        // Fallback to native fetch
-        try {
+        // Attempt 2: got-scraping without proxy
+        async () => {
+            console.log('Attempt 2: got-scraping without proxy...');
+            return await gotScraping(requestConfig);
+        },
+        
+        // Attempt 3: native fetch
+        async () => {
+            console.log('Attempt 3: native fetch...');
             const fetchResponse = await fetch(requestConfig.url, {
                 method: 'POST',
                 headers: requestConfig.headers,
                 body: JSON.stringify(requestConfig.json)
             });
             
-            response = {
+            return {
                 statusCode: fetchResponse.status,
                 headers: Object.fromEntries(fetchResponse.headers.entries()),
                 body: await fetchResponse.text()
             };
-            console.log('Request successful with fetch');
-        } catch (fetchError) {
-            console.error('Both got-scraping and fetch failed');
-            throw new Error(`Network request failed: got-scraping: ${gotError.message}, fetch: ${fetchError.message}`);
+        },
+        
+        // Attempt 4: Try HTTP instead of HTTPS (last resort)
+        async () => {
+            console.log('Attempt 4: trying HTTP instead of HTTPS...');
+            const httpUrl = requestConfig.url.replace('https://', 'http://');
+            const fetchResponse = await fetch(httpUrl, {
+                method: 'POST',
+                headers: requestConfig.headers,
+                body: JSON.stringify(requestConfig.json)
+            });
+            
+            return {
+                statusCode: fetchResponse.status,
+                headers: Object.fromEntries(fetchResponse.headers.entries()),
+                body: await fetchResponse.text()
+            };
+        }
+    ];
+
+    let lastError;
+    for (let i = 0; i < attempts.length; i++) {
+        try {
+            response = await attempts[i]();
+            console.log(`Success with attempt ${i + 1}`);
+            break;
+        } catch (error) {
+            console.log(`Attempt ${i + 1} failed:`, error.message);
+            lastError = error;
+            
+            // If this is the last attempt, throw the error
+            if (i === attempts.length - 1) {
+                throw new Error(`All network attempts failed. Last error: ${error.message}`);
+            }
         }
     }
     
